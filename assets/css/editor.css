@@ -1,0 +1,14 @@
+/* Doar în editorul de blocuri: imaginile pe care functions.php le injectează pe site ca variabile CSS. */
+:root{
+  --logo-circle:url("../img/logo-circle.png");
+  --logo-full:url("../img/logo-full.png");
+}
+/* În editor slide-urile hero-ului stau unul sub altul, ca să poată fi editate toate. */
+.hero{display:block; min-height:0;}
+.hero-slides{display:block;}
+.hero .slide{opacity:1; visibility:visible; margin:0 !important; min-height:560px;}
+.hero .slide + .slide{border-top:3px dashed rgba(247,243,236,0.5);}
+.hero-content{padding:64px 0;}
+.hero-foot{max-width:none; padding:32px 0 48px;}
+.hero .slide-bg{margin:0 !important;}
+.hero .slide-bg img{height:100% !important;}
