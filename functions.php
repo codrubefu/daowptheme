@@ -66,13 +66,41 @@ add_action( 'wp_enqueue_scripts', function () {
 add_action( 'wp_head', function () {
 	echo '<link rel="icon" href="' . esc_url( get_theme_file_uri( 'assets/img/logo-circle.png' ) ) . '">' . "\n";
 
-	// Descrierea pentru motoarele de căutare: rezumatul articolului/paginii, altfel sloganul site-ului.
-	$desc = is_singular() && ! is_front_page() ? get_the_excerpt() : get_bloginfo( 'description' );
-	$desc = wp_trim_words( wp_strip_all_tags( $desc ), 30, '…' );
-	if ( $desc ) {
-		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
+	// Descrierea pentru motoarele de căutare: rezumatul articolului/paginii sau descrierea categoriei,
+	// altfel sloganul site-ului; dacă sloganul e gol (implicit la instalările noi), un text fix.
+	$desc = '';
+	if ( is_singular() && ! is_front_page() ) {
+		$desc = has_excerpt() ? get_the_excerpt() : strip_shortcodes( get_post_field( 'post_content' ) );
+	} elseif ( is_category() ) {
+		$desc = category_description();
 	}
+	if ( ! trim( wp_strip_all_tags( $desc ) ) ) {
+		$desc = get_bloginfo( 'description' ) ?: 'Clubul Sportiv DAO Iași – arte marțiale tradiționale din 1991: Qwan Ki Do, Võ Đài și pregătire fizică pentru copii și adulți.';
+	}
+	// Spațiu după fiecare tag, ca titlurile să nu se lipească de textul următor după eliminarea HTML-ului.
+	$desc = wp_trim_words( wp_strip_all_tags( str_replace( '>', '> ', $desc ) ), 30, '…' );
+	echo '<meta name="description" content="' . esc_attr( html_entity_decode( $desc, ENT_QUOTES, 'UTF-8' ) ) . '">' . "\n";
 }, 1 );
+
+/**
+ * robots.txt generat de WordPress (fără fișier fizic în rădăcina site-ului).
+ * Dacă e bifat „Descurajează motoarele de căutare” (Setări → Citire), se păstrează blocarea implicită.
+ */
+add_filter( 'robots_txt', function ( $output, $public ) {
+	if ( ! $public ) {
+		return $output;
+	}
+	return implode( "\n", [
+		'User-agent: *',
+		'Disallow: /wp-admin/',
+		'Allow: /wp-admin/admin-ajax.php',
+		'Disallow: /wp-login.php',
+		'Disallow: /?s=',
+		'Disallow: /search/',
+		'',
+		'Sitemap: ' . home_url( '/wp-sitemap.xml' ),
+	] ) . "\n";
+}, 10, 2 );
 
 /** Scriptul de emoji al WordPress nu e folosit, dar blochează încărcarea paginii. */
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
