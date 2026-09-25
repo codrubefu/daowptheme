@@ -25,7 +25,7 @@ add_action( 'current_screen', function ( $screen ) {
 	$post_id = (int) ( $_GET['post'] ?? 0 );
 	$sheet   = $post_id && $post_id === (int) get_option( 'page_on_front' ) ? 'front' : 'blog';
 	add_editor_style( [
-		'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap',
+		'assets/css/fonts.css',
 		"assets/css/{$sheet}.css",
 		'assets/css/editor.css',
 	] );
@@ -33,11 +33,22 @@ add_action( 'current_screen', function ( $screen ) {
 
 /** Prima pagină folosește stilul din index.html, restul site-ului pe cel din blog.html. */
 add_action( 'wp_enqueue_scripts', function () {
-	$ver = wp_get_theme()->get( 'Version' );
-	wp_enqueue_style( 'dao-fonts', 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Work+Sans:wght@400;500;600;700&display=swap', [], null );
-
+	$ver   = wp_get_theme()->get( 'Version' );
 	$sheet = is_front_page() ? 'front' : 'blog';
-	wp_enqueue_style( 'dao-' . $sheet, get_theme_file_uri( "assets/css/{$sheet}.css" ), [ 'dao-fonts' ], $ver );
+
+	if ( is_front_page() ) {
+		// Pe prima pagină CSS-ul e pus direct în HTML: o cerere în minus înainte de afișare (LCP mai mic).
+		foreach ( [ 'fonts', 'front' ] as $name ) {
+			$css = file_get_contents( get_theme_file_path( "assets/css/{$name}.css" ) );
+			$css = str_replace( 'url(../', 'url(' . get_theme_file_uri( 'assets/' ), $css );
+			wp_register_style( "dao-{$name}", false, [], $ver );
+			wp_enqueue_style( "dao-{$name}" );
+			wp_add_inline_style( "dao-{$name}", $css );
+		}
+	} else {
+		wp_enqueue_style( 'dao-fonts', get_theme_file_uri( 'assets/css/fonts.css' ), [], $ver );
+		wp_enqueue_style( 'dao-blog', get_theme_file_uri( 'assets/css/blog.css' ), [ 'dao-fonts' ], $ver );
+	}
 
 	// Imaginile erau inline (base64) în HTML-ul original; acum sunt fișiere în temă.
 	wp_add_inline_style( 'dao-' . $sheet, sprintf(
@@ -54,7 +65,49 @@ add_action( 'wp_enqueue_scripts', function () {
 
 add_action( 'wp_head', function () {
 	echo '<link rel="icon" href="' . esc_url( get_theme_file_uri( 'assets/img/logo-circle.png' ) ) . '">' . "\n";
-} );
+
+	// Descrierea pentru motoarele de căutare: rezumatul articolului/paginii, altfel sloganul site-ului.
+	$desc = is_singular() && ! is_front_page() ? get_the_excerpt() : get_bloginfo( 'description' );
+	$desc = wp_trim_words( wp_strip_all_tags( $desc ), 30, '…' );
+	if ( $desc ) {
+		echo '<meta name="description" content="' . esc_attr( $desc ) . '">' . "\n";
+	}
+}, 1 );
+
+/** Scriptul de emoji al WordPress nu e folosit, dar blochează încărcarea paginii. */
+remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+remove_action( 'wp_print_styles', 'print_emoji_styles' );
+remove_action( 'wp_enqueue_scripts', 'wp_enqueue_emoji_styles' );
+
+/** Fonturile sunt în temă: se cer odată cu CSS-ul, ca textul să apară direct cu fontul final (fără salt de layout). */
+add_action( 'wp_head', function () {
+	foreach ( [ 'work-sans-ro', 'cormorant-garamond-ro' ] as $font ) {
+		printf(
+			'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+			esc_url( get_theme_file_uri( "assets/fonts/{$font}.woff2" ) )
+		);
+	}
+}, 2 );
+
+/**
+ * Imaginea primului slide din hero e LCP-ul paginii: se cere cu prioritate mare, fără lazy-load.
+ * Slide-urile ascunse vin după ea, cu prioritate mică, ca să nu-i ia din bandă.
+ */
+add_filter( 'render_block_core/group', function ( $html, $block ) {
+	static $slide = 0;
+	$classes = ' ' . ( $block['attrs']['className'] ?? '' ) . ' ';
+	if ( ! is_front_page() || ! in_the_loop() || ! str_contains( $classes, ' slide ' ) ) {
+		return $html;
+	}
+	$first = 0 === $slide++;
+	$img   = new WP_HTML_Tag_Processor( $html );
+	if ( $img->next_tag( 'img' ) ) {
+		$img->set_attribute( 'fetchpriority', $first ? 'high' : 'low' );
+		$img->remove_attribute( 'loading' );
+		$html = $img->get_updated_html();
+	}
+	return $html;
+}, 10, 2 );
 
 /** Blogul afișează toate articolele pe o singură pagină, ca în blog.html. */
 add_action( 'pre_get_posts', function ( $q ) {

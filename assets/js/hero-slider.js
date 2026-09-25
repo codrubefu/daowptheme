@@ -9,9 +9,10 @@
 	// Cifrele stau peste slide-uri, jos: textul slide-urilor își lasă loc sub el cât sunt ele de înalte.
 	const foot = hero && hero.querySelector( '.hero-foot' );
 	if ( foot ) {
-		const measure = () => hero.style.setProperty( '--foot-h', `${ foot.offsetHeight }px` );
-		measure();
-		new ResizeObserver( measure ).observe( foot );
+		// ResizeObserver dă înălțimea și la prima observare, fără un reflow forțat (offsetHeight).
+		new ResizeObserver( ( [ entry ] ) => {
+			hero.style.setProperty( '--foot-h', `${ entry.borderBoxSize[ 0 ].blockSize }px` );
+		} ).observe( foot );
 	}
 
 	if ( slides.length < 2 ) {

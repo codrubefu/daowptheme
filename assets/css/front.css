@@ -74,7 +74,7 @@
     width:42px; height:42px; border-radius:50%;
     background-image:var(--logo-circle); background-size:contain; background-position:center; background-repeat:no-repeat;
   }
-  .brand small{display:block; font-family:'Work Sans',sans-serif; font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink); opacity:0.55; font-weight:500;}
+  .brand small{display:block; font-family:'Work Sans',sans-serif; font-size:10.5px; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink); opacity:0.62; font-weight:500;}
   nav.links{display:flex; gap:32px; font-size:14.5px; font-weight:500;}
   nav.links a{opacity:0.8; transition:opacity .15s;}
   nav.links a:hover{opacity:1; color:var(--crimson);}
@@ -82,7 +82,7 @@
     display:inline-flex; align-items:center; gap:8px;
     padding:11px 22px; font-size:14px; font-weight:600;
     border:1px solid var(--crimson); border-radius:var(--radius);
-    background:var(--crimson); color:#f7f3ec;
+    background:var(--crimson); color:#ffffff;
     transition:transform .15s, background .15s;
   }
   .btn:hover, .wp-block-button__link:hover{background:var(--crimson-dark); transform:translateY(-1px);}
@@ -125,9 +125,10 @@
   .hero-nav > *{pointer-events:auto;}
   .hero-arrow{width:40px; height:40px; border-radius:50%; border:1px solid rgba(247,243,236,0.4); background:transparent; color:#f7f3ec; display:flex; align-items:center; justify-content:center; cursor:pointer; transition:border-color .15s, background .15s;}
   .hero-arrow:hover, .hero-arrow:focus-visible{border-color:#f7f3ec; background:rgba(247,243,236,0.08);}
-  .hero-dots{display:flex; gap:8px;}
-  .hero-dot{width:10px; height:10px; padding:0; border-radius:5px; border:none; background:rgba(247,243,236,0.4); cursor:pointer; transition:width .3s, background .3s;}
-  .hero-dot[aria-current="true"]{width:28px; background:var(--crimson);}
+  .hero-dots{display:flex; gap:0;}
+  /* Punctul vizibil are 10px, dar zona de atingere are 24px (padding transparent). */
+  .hero-dot{box-sizing:content-box; width:10px; height:10px; padding:7px; background-clip:content-box; border-radius:12px; border:none; background-color:rgba(247,243,236,0.4); cursor:pointer; transition:width .3s, background .3s;}
+  .hero-dot[aria-current="true"]{width:28px; background-color:var(--crimson);}
   .hero .eyebrow{color:#ff6b6f;}
   .hero h1, .hero .slide h2{font-size:clamp(34px, min(6vw, 8svh), 68px); line-height:1.02; margin:18px 0 22px; color:#f7f3ec;}
   .hero h1 em, .hero .slide h2 em{font-style:normal; color:#f2c9c9;}
@@ -148,6 +149,7 @@
   .head{max-width:640px; margin-bottom:48px;}
   .head h2{font-size:clamp(30px,4vw,44px); margin-top:14px;}
   .head p{opacity:0.8; margin-top:14px; font-size:16px;}
+  .head p.eyebrow{opacity:1;}
 
   /* DESPRE CLUB */
   .about-grid{display:grid; grid-template-columns:0.9fr 1.1fr; gap:64px; align-items:start;}
@@ -156,6 +158,7 @@
   .timeline .item::before{content:""; position:absolute; left:-33px; top:6px; width:9px; height:9px; border-radius:50%; background:var(--crimson);}
   .timeline .item b, .timeline .item p.when{font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--crimson); display:block; margin-bottom:4px;}
   .timeline .item p{margin:0; opacity:0.82; font-size:15px;}
+  .timeline .item p.when{opacity:1;}
 
   .pillcard{background:var(--paper-dim); border:1px solid var(--line); border-radius:var(--radius); padding:26px;}
   .pillcard blockquote{font-family:'Cormorant Garamond',serif; font-size:22px; font-style:italic; margin:0 0 10px; line-height:1.4;}
@@ -174,9 +177,9 @@
   /* PROGRAM */
   .program-wrap{display:grid; grid-template-columns:repeat(auto-fit, minmax(300px, 1fr)); gap:28px;}
   .sched{border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
-  .sched .top{background:var(--crimson); color:#f7f3ec; padding:20px 26px;}
-  .sched .top h3{font-size:21px; color:#f7f3ec;}
-  .sched .top span, .sched .top p{font-size:13px; opacity:0.85; margin:0;}
+  .sched .top{background:var(--crimson); color:#ffffff; padding:20px 26px;}
+  .sched .top h3{font-size:21px; color:#ffffff;}
+  .sched .top span, .sched .top p{font-size:13px; margin:0;}
   .sched .rows{padding:6px 26px 22px;}
   .row{display:flex; justify-content:space-between; align-items:baseline; padding:14px 0; border-bottom:1px solid var(--line); gap:16px;}
   .row:last-child{border-bottom:none;}
