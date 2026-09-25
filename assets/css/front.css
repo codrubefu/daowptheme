@@ -93,20 +93,21 @@
 
   /* HERO */
   /* HERO = slider pe toată înălțimea ecranului (minus meniul: 72px + 1px bordură).
-     Slide-urile, cifrele (.hero-foot) și navigarea stau suprapuse în aceeași celulă de grilă;
-     hero-slider.js pune în --foot-h înălțimea cifrelor, ca textul să nu intre sub ele. */
+     Grilă cu 2 rânduri: textul slide-ului sus (1fr), cifrele (.hero-foot) jos (auto).
+     Slide-urile se întind pe ambele rânduri (subgrid), deci poza e sub cifre, dar textul nu intră
+     sub ele — fără să măsurăm nimic din JS (evită reflow-ul forțat). */
   .hero{
     --hero-h: calc(100vh - 73px);
     --hero-h: calc(100svh - 73px - env(safe-area-inset-top, 0px));
     position:relative; overflow:hidden; padding:0;
-    display:grid; min-height:var(--hero-h);
+    display:grid; grid-template-rows:1fr auto; min-height:var(--hero-h);
     color:#ffffff;
     background:var(--navy-dark);
   }
-  .hero > *{grid-area:1/1;}
-  .hero-slides{display:grid;}
+  .hero > *{grid-column:1; grid-row:1 / -1;}
+  .hero-slides, .hero .slide{display:grid; grid-template-rows:subgrid;}
   .hero .slide{
-    grid-area:1/1; position:relative; display:flex; flex-direction:column; justify-content:center;
+    grid-column:1; grid-row:1 / -1; position:relative;
     opacity:0; visibility:hidden; transition:opacity .9s ease, visibility 0s linear .9s;
   }
   .hero .slide:first-child, .hero.is-slider .slide.is-active{opacity:1; visibility:visible; transition:opacity .9s ease;}
@@ -118,8 +119,8 @@
     content:""; position:absolute; inset:0; pointer-events:none;
     background:linear-gradient(90deg, rgba(10,10,20,0.88) 0%, rgba(10,10,20,0.6) 45%, rgba(10,10,20,0.32) 100%);
   }
-  .hero-content{position:relative; z-index:1; width:100%; max-width:680px; padding:48px 0 calc(var(--foot-h, 130px) + 32px);}
-  .hero-foot{position:relative; z-index:2; align-self:end; width:100%; max-width:680px; padding:0 0 48px;}
+  .hero-content{grid-row:1; align-self:center; position:relative; z-index:1; width:100%; max-width:680px; padding:48px 0 32px;}
+  .hero-foot{grid-row:2; margin-top:0; position:relative; z-index:2; width:100%; max-width:680px; padding:0 0 48px;}
   .hero-foot .hero-stats{margin-top:0;}
   .hero-nav{position:relative; z-index:3; align-self:end; width:100%; max-width:1100px; margin:0 auto 67px; padding:0 24px; display:flex; align-items:center; justify-content:flex-end; gap:14px; pointer-events:none;}
   .hero-nav > *{pointer-events:auto;}
@@ -231,10 +232,9 @@
     nav.links{display:none;}
     .burger{display:block;}
     /* Pe telefon: poza pe tot ecranul, textul jos peste un gradient; săgețile sus-dreapta. */
-    .hero .slide{justify-content:flex-end;}
     .hero .slide-bg img{object-position:center 35%;}
     .hero .slide::after{background:linear-gradient(180deg, rgba(10,10,20,0.15) 0%, rgba(10,10,20,0.45) 30%, rgba(10,10,20,0.9) 62%, rgba(10,10,20,0.96) 100%);}
-    .hero-content{max-width:none; padding:72px 24px calc(var(--foot-h, 120px) + 20px);}
+    .hero-content{align-self:end; max-width:none; padding:72px 24px 20px;}
     .hero h1, .hero .slide h2{font-size:clamp(30px, min(9vw, 5.4svh), 46px); margin:12px 0 14px;}
     .hero p.lead{font-size:15.5px; margin-bottom:20px;}
     .hero .cta-row{gap:10px;}

@@ -6,15 +6,6 @@
 	const hero = document.querySelector( '.hero' );
 	const slides = hero ? Array.from( hero.querySelectorAll( '.slide' ) ) : [];
 
-	// Cifrele stau peste slide-uri, jos: textul slide-urilor își lasă loc sub el cât sunt ele de înalte.
-	const foot = hero && hero.querySelector( '.hero-foot' );
-	if ( foot ) {
-		// ResizeObserver dă înălțimea și la prima observare, fără un reflow forțat (offsetHeight).
-		new ResizeObserver( ( [ entry ] ) => {
-			hero.style.setProperty( '--foot-h', `${ entry.borderBoxSize[ 0 ].blockSize }px` );
-		} ).observe( foot );
-	}
-
 	if ( slides.length < 2 ) {
 		return;
 	}
