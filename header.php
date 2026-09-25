@@ -8,7 +8,6 @@
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
 
-<?php $on_blog = is_home() || is_singular( 'post' ) || is_category() || is_archive(); ?>
 <header class="site">
   <div class="wrap nav">
     <a href="<?php echo esc_url( is_front_page() ? '#top' : home_url( '/' ) ); ?>" class="brand">
@@ -16,11 +15,7 @@
       <span>Club DAO<small>Qwan Ki Do · Iași</small></span>
     </a>
     <nav class="links">
-      <a href="<?php echo esc_url( dao_section_url( 'club' ) ); ?>">Despre club</a>
-      <a href="<?php echo esc_url( dao_section_url( 'qkd' ) ); ?>">Qwan Ki Do</a>
-      <a href="<?php echo esc_url( dao_section_url( 'program' ) ); ?>">Program</a>
-      <a href="<?php echo esc_url( dao_blog_url() ); ?>"<?php echo $on_blog ? ' class="active"' : ''; ?>>Blog</a>
-      <a href="<?php echo esc_url( dao_section_url( 'contact' ) ); ?>">Contact</a>
+      <?php dao_menu_links(); ?>
     </nav>
     <?php if ( is_front_page() ) : ?>
     <a class="btn navbtn" href="#contact" style="display:inline-flex;">Înscrie-te</a>
@@ -31,11 +26,7 @@
   </div>
   <div id="mnav" style="display:none; border-top:1px solid var(--line);">
     <div class="wrap" style="display:flex; flex-direction:column; padding:18px 24px; gap:16px; font-size:15px;">
-      <a href="<?php echo esc_url( dao_section_url( 'club' ) ); ?>">Despre club</a>
-      <a href="<?php echo esc_url( dao_section_url( 'qkd' ) ); ?>">Qwan Ki Do</a>
-      <a href="<?php echo esc_url( dao_section_url( 'program' ) ); ?>">Program</a>
-      <a href="<?php echo esc_url( dao_blog_url() ); ?>">Blog</a>
-      <a href="<?php echo esc_url( dao_section_url( 'contact' ) ); ?>">Contact</a>
+      <?php dao_menu_links( false ); ?>
     </div>
   </div>
 </header>

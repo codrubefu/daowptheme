@@ -8,6 +8,7 @@ add_action( 'after_setup_theme', function () {
 	add_theme_support( 'post-thumbnails' );
 	add_theme_support( 'html5', [ 'search-form', 'gallery', 'caption', 'style', 'script' ] );
 	add_theme_support( 'editor-styles' );
+	register_nav_menus( [ 'primary' => 'Meniu principal' ] );
 } );
 
 /**
@@ -81,4 +82,47 @@ function dao_tag_label( $post = null ) {
 	}
 	$cats = get_the_category( $post );
 	return implode( ' · ', wp_list_pluck( $cats, 'name' ) );
+}
+
+/**
+ * Link-urile meniului din antet: meniul din Aspect → Meniuri pus pe „Meniu principal”,
+ * altfel link-urile implicite. Se afișează ca <a> simple, ca în designul original.
+ */
+function dao_menu_links( $mark_active = true ) {
+	$links     = [];
+	$locations = get_nav_menu_locations();
+	$items     = empty( $locations['primary'] ) ? false : wp_get_nav_menu_items( $locations['primary'] );
+
+	if ( $items ) {
+		foreach ( $items as $item ) {
+			if ( ! $item->menu_item_parent ) {
+				$links[] = [ $item->url, $item->title, $item->target ];
+			}
+		}
+	} else {
+		$links = [
+			[ dao_section_url( 'club' ), 'Despre club' ],
+			[ dao_section_url( 'qkd' ), 'Qwan Ki Do' ],
+			[ dao_section_url( 'program' ), 'Program' ],
+			[ dao_blog_url(), 'Blog' ],
+			[ dao_section_url( 'contact' ), 'Contact' ],
+		];
+	}
+
+	$on_blog = is_home() || is_singular( 'post' ) || is_category() || is_archive();
+	foreach ( $links as $link ) {
+		$url = $link[0];
+		// Pe prima pagină, ancorele spre secțiunile ei rămân locale (#club), fără reîncărcare.
+		if ( is_front_page() && str_starts_with( $url, home_url( '/#' ) ) ) {
+			$url = substr( $url, strlen( home_url( '/' ) ) );
+		}
+		$active = $mark_active && $on_blog && untrailingslashit( $link[0] ) === untrailingslashit( dao_blog_url() );
+		printf(
+			'<a href="%s"%s%s>%s</a>' . "\n",
+			esc_url( $url ),
+			$active ? ' class="active"' : '',
+			empty( $link[2] ) ? '' : ' target="' . esc_attr( $link[2] ) . '" rel="noopener"',
+			esc_html( $link[1] )
+		);
+	}
 }
