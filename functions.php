@@ -53,7 +53,7 @@ add_action( 'wp_enqueue_scripts', function () {
 	// Imaginile erau inline (base64) în HTML-ul original; acum sunt fișiere în temă.
 	wp_add_inline_style( 'dao-' . $sheet, sprintf(
 		':root{--logo-circle:url("%s");--logo-full:url("%s");}',
-		esc_url( get_theme_file_uri( 'assets/img/logo-circle.png' ) ),
+		esc_url( get_theme_file_uri( 'assets/img/logo-circle.webp' ) ),
 		esc_url( get_theme_file_uri( 'assets/img/logo-full.png' ) )
 	) );
 

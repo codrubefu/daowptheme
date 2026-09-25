@@ -1,6 +1,6 @@
 /* Doar în editorul de blocuri: imaginile pe care functions.php le injectează pe site ca variabile CSS. */
 :root{
-  --logo-circle:url("../img/logo-circle.png");
+  --logo-circle:url("../img/logo-circle.webp");
   --logo-full:url("../img/logo-full.png");
 }
 /* În editor slide-urile hero-ului stau unul sub altul, ca să poată fi editate toate. */
