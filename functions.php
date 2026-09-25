@@ -99,8 +99,120 @@ add_filter( 'robots_txt', function ( $output, $public ) {
 		'Disallow: /search/',
 		'',
 		'Sitemap: ' . home_url( '/wp-sitemap.xml' ),
+		'Agentmap: ' . home_url( '/.well-known/ai-catalog.json' ),
 	] ) . "\n";
 }, 10, 2 );
+
+/**
+ * /llms.txt (https://llmstxt.org) și /.well-known/ai-catalog.json (Agentic Resource Discovery, specVersion 1.0),
+ * generate din conținutul site-ului. Un fișier fizic cu același nume în rădăcina site-ului le-ar înlocui.
+ */
+add_action( 'init', function () {
+	$path = wp_parse_url( $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH );
+	$base = untrailingslashit( (string) wp_parse_url( home_url(), PHP_URL_PATH ) );
+	if ( $base . '/llms.txt' === $path ) {
+		header( 'Content-Type: text/markdown; charset=utf-8' );
+		header( 'Access-Control-Allow-Origin: *' );
+		echo dao_llms_txt();
+		exit;
+	}
+	if ( $base . '/.well-known/ai-catalog.json' === $path ) {
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Access-Control-Allow-Origin: *' );
+		echo wp_json_encode( dao_ai_catalog(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		exit;
+	}
+}, 0 );
+
+add_action( 'wp_head', function () {
+	printf( '<link rel="ai-catalog" href="%s">' . "\n", esc_url( home_url( '/.well-known/ai-catalog.json' ) ) );
+}, 3 );
+
+/** Un rând de listă llms.txt: „- [titlu](url): descriere”. */
+function dao_llms_link( $title, $url, $desc = '' ) {
+	$title = str_replace( [ '[', ']' ], '', html_entity_decode( wp_strip_all_tags( $title ), ENT_QUOTES, 'UTF-8' ) );
+	$desc  = trim( preg_replace( '/\s+/', ' ', html_entity_decode( wp_strip_all_tags( str_replace( '>', '> ', $desc ) ), ENT_QUOTES, 'UTF-8' ) ) );
+	return "- [{$title}]({$url})" . ( $desc ? ": {$desc}" : '' ) . "\n";
+}
+
+function dao_llms_txt() {
+	$name    = html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' ) ?: 'Club DAO';
+	$summary = 'Clubul Sportiv DAO Iași – arte marțiale tradiționale din 1991: Qwan Ki Do, Võ Đài și pregătire fizică pentru copii și adulți.';
+
+	$out  = "# {$name}\n\n> {$summary}\n\n";
+	$out .= "Site în limba română. Antrenamentele au loc în Iași; programul, locațiile și datele de contact sunt pe prima pagină.\n\n";
+
+	$out .= "## Club\n\n";
+	$out .= dao_llms_link( 'Prima pagină', home_url( '/' ), 'prezentarea clubului, Qwan Ki Do, program și contact' );
+	$out .= dao_llms_link( 'Despre club', home_url( '/#club' ) );
+	$out .= dao_llms_link( 'Qwan Ki Do', home_url( '/#qkd' ) );
+	$out .= dao_llms_link( 'Program antrenamente', home_url( '/#program' ) );
+	$out .= dao_llms_link( 'Contact', home_url( '/#contact' ) );
+	$exclude = array_filter( [ (int) get_option( 'page_on_front' ), (int) get_option( 'page_for_posts' ) ] );
+	foreach ( get_pages( [ 'exclude' => $exclude, 'sort_column' => 'menu_order,post_title' ] ) as $page ) {
+		$out .= dao_llms_link( $page->post_title, get_permalink( $page ), wp_trim_words( $page->post_excerpt ?: str_replace( '>', '> ', strip_shortcodes( $page->post_content ) ), 20, '…' ) );
+	}
+
+	$cats = get_categories( [ 'hide_empty' => true ] );
+	if ( $cats ) {
+		$out .= "\n## Categorii blog\n\n";
+		$out .= dao_llms_link( 'Blog', dao_blog_url(), 'toate articolele' );
+		foreach ( $cats as $cat ) {
+			$out .= dao_llms_link( $cat->name, get_category_link( $cat ), $cat->description );
+		}
+	}
+
+	$posts = get_posts( [ 'numberposts' => 30, 'post_status' => 'publish' ] );
+	if ( $posts ) {
+		$out .= "\n## Articole\n\n";
+		foreach ( $posts as $post ) {
+			$out .= dao_llms_link( get_the_title( $post ), get_permalink( $post ), wp_trim_words( $post->post_excerpt ?: str_replace( '>', '> ', strip_shortcodes( $post->post_content ) ), 20, '…' ) );
+		}
+	}
+
+	$out .= "\n## Optional\n\n";
+	$out .= dao_llms_link( 'Sitemap', home_url( '/wp-sitemap.xml' ), 'lista completă a paginilor' );
+	$out .= dao_llms_link( 'Flux RSS', get_feed_link(), 'ultimele articole' );
+	return $out;
+}
+
+function dao_ai_catalog() {
+	$domain  = wp_parse_url( home_url(), PHP_URL_HOST );
+	$name    = html_entity_decode( get_bloginfo( 'name' ), ENT_QUOTES, 'UTF-8' ) ?: 'Club DAO';
+	$updated = get_lastpostmodified( 'gmt' );
+	return [
+		'specVersion' => '1.0',
+		'host'        => [
+			'displayName'      => $name,
+			'identifier'       => 'did:web:' . $domain,
+			'documentationUrl' => home_url( '/llms.txt' ),
+			'logoUrl'          => get_theme_file_uri( 'assets/img/logo-circle.png' ),
+		],
+		'entries'     => [
+			[
+				'identifier'            => "urn:air:{$domain}:knowledge:llms-txt",
+				'displayName'           => $name . ' – ghid pentru modele AI',
+				'type'                  => 'text/markdown',
+				'url'                   => home_url( '/llms.txt' ),
+				'description'           => 'Rezumatul site-ului Clubului Sportiv DAO Iași (Qwan Ki Do, Võ Đài, pregătire fizică) cu link-uri spre pagini, categorii și articole.',
+				'tags'                  => [ 'qwan ki do', 'vo dai', 'arte martiale', 'iasi', 'club sportiv' ],
+				'representativeQueries' => [
+					'Unde pot face Qwan Ki Do în Iași?',
+					'Care este programul de antrenamente al Clubului DAO?',
+					'Ce este Võ Đài?',
+				],
+				'updatedAt'             => $updated ? gmdate( 'Y-m-d\TH:i:s\Z', strtotime( $updated . ' UTC' ) ) : gmdate( 'Y-m-d\TH:i:s\Z' ),
+			],
+			[
+				'identifier'  => "urn:air:{$domain}:knowledge:sitemap",
+				'displayName' => $name . ' – sitemap',
+				'type'        => 'application/xml',
+				'url'         => home_url( '/wp-sitemap.xml' ),
+				'description' => 'Lista completă a paginilor și articolelor publice.',
+			],
+		],
+	];
+}
 
 /** Scriptul de emoji al WordPress nu e folosit, dar blochează încărcarea paginii. */
 remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
